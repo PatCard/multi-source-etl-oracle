@@ -1,0 +1,91 @@
+
+services:
+
+  oracle:
+    image: gvenzl/oracle-free:latest
+    container_name: etl_oracle
+    ports:
+      - "1521:1521"
+    environment:
+      ORACLE_PASSWORD: Oracle123
+      APP_USER: etl_user
+      APP_USER_PASSWORD: Etl123
+    volumes:
+      - oracle_data:/opt/oracle/oradata
+      - ./sql/init_oracle.sql:/docker-entrypoint-initdb.d/init_oracle.sql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    networks:
+      - etl_network
+
+  mysql:
+    image: mysql:8.0
+    container_name: etl_mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: Mysql123
+      MYSQL_DATABASE: source_db
+      MYSQL_USER: etl_reader
+      MYSQL_PASSWORD: Reader123
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./sql/init_mysql.sql:/docker-entrypoint-initdb.d/init_mysql.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+    networks:
+      - etl_network
+
+  mongodb:
+    image: mongo:7.0
+    container_name: etl_mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: Mongo123
+      MONGO_INITDB_DATABASE: source_db
+    volumes:
+      - mongo_data:/data/db
+      - ./sql/init_mongo.js:/docker-entrypoint-initdb.d/init_mongo.js
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+    networks:
+      - etl_network
+
+  etl:
+    build: .
+    container_name: etl_python
+    env_file:
+      - .env.dev
+    volumes:
+      - .:/app
+    working_dir: /app
+    depends_on:
+      oracle:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    command: ["python", "orchestrator.py"]
+    networks:
+      - etl_network
+
+volumes:
+  oracle_data:
+  mysql_data:
+  mongo_data:
+
+networks:
+  etl_network:
+    driver: bridge
