@@ -23,11 +23,13 @@ services:
 
   mysql:
     image: mysql:8.0
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     container_name: etl_mysql
     ports:
       - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: Mysql123
+      MYSQL_CHARSET: utf8mb4
       MYSQL_DATABASE: source_db
       MYSQL_USER: etl_reader
       MYSQL_PASSWORD: Reader123

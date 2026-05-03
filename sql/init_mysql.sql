@@ -1,8 +1,7 @@
--- =============================================
--- multi-source-etl-oracle
--- Inicialización de datos de ejemplo en MySQL
--- =============================================
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
 
+CREATE DATABASE IF NOT EXISTS source_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE source_db;
 
 CREATE TABLE productos (
@@ -13,7 +12,7 @@ CREATE TABLE productos (
     precio    DECIMAL(12,2),
     stock     INT DEFAULT 0,
     creado_en DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 INSERT INTO productos (codigo, nombre, categoria, precio, stock) VALUES
 ('MSQ-001', 'Laptop Pro 15',       'Electrónica',  1299.99, 45),
